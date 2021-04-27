@@ -3,6 +3,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken'); // Added
+require('dotenv').config() // Added
 
 const users = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
@@ -15,12 +16,14 @@ users.virtual('token').get(function () {
   let tokenObject = {
     username: this.username,
   }
-  return jwt.sign(tokenObject)
+  // Add time limit to jwt token
+  // Create process.env.SECRET using the crypto library
+  return jwt.sign(tokenObject, process.env.SECRET,{expiresIn:'1h'})  // Add process.env.SECRET
 });
 
 users.pre('save', async function () {
-  if (this.isModified('password')) {
-    this.password = bcrypt.hash(this.password, 10);
+  if (this.isModified('password')) {      // Returns true if any of the given paths is modified, else false. If no arguments, returns true if any path in this document is modified.
+    this.password = await bcrypt.hash(this.password, 10);    // add await
   }
 });
 
@@ -28,6 +31,7 @@ users.pre('save', async function () {
 users.statics.authenticateBasic = async function (username, password) {
   const user = await this.findOne({ username })
   const valid = await bcrypt.compare(password, user.password)
+  console.log("authenticateBasic",password,user.password,valid)
   if (valid) { return user; }
   throw new Error('Invalid User');
 }
