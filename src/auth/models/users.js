@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken'); // Added
 require('dotenv').config() // Added
+// require('crypto').randomBytes(64).toString('hex')  => to ensure process.env.secret
 
 const users = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
